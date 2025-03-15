@@ -1,23 +1,29 @@
 import { useQuery } from "@tanstack/react-query";
 import { MovieCard } from "@/components/movie-card";
 import { useAuth } from "@/hooks/use-auth";
+import type { Review } from "@shared/schema";
+import type { TMDBMovie } from "@/types/tmdb";
+
+interface ReviewedMovie extends TMDBMovie {
+  rating: number;
+}
 
 export default function ProfilePage() {
   const { user } = useAuth();
-  const { data: reviews } = useQuery({ queryKey: ["/api/reviews/user"] });
+  const { data: reviews } = useQuery<Review[]>({ queryKey: ["/api/reviews/user"] });
 
-  const { data: reviewedMovies } = useQuery({
+  const { data: reviewedMovies } = useQuery<ReviewedMovie[]>({
     queryKey: ["/api/movies/reviewed", reviews],
     enabled: !!reviews,
     queryFn: async () => {
       const movies = await Promise.all(
-        reviews.map((review: any) =>
+        reviews!.map((review) =>
           fetch(`/api/movies/${review.movieId}`).then((res) => res.json()),
         ),
       );
-      return movies.map((movie: any, index: number) => ({
+      return movies.map((movie, index) => ({
         ...movie,
-        rating: reviews[index].rating,
+        rating: reviews![index].rating,
       }));
     },
   });
@@ -35,7 +41,7 @@ export default function ProfilePage() {
       <main className="container mx-auto px-4 py-8">
         {reviewedMovies?.length ? (
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {reviewedMovies.map((movie: any) => (
+            {reviewedMovies.map((movie) => (
               <MovieCard
                 key={movie.id}
                 id={movie.id}

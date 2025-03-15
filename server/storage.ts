@@ -1,90 +1,67 @@
-import { User, InsertUser, Review, InsertReview } from "@shared/schema";
+import { InsertUser, InsertReview } from "@shared/schema";
 import session from "express-session";
 import createMemoryStore from "memorystore";
+import { User, Review } from './db';
+import { Types } from 'mongoose';
 
 const MemoryStore = createMemoryStore(session);
 
 export interface IStorage {
-  getUser(id: number): Promise<User | undefined>;
-  getUserByUsername(username: string): Promise<User | undefined>;
-  createUser(user: InsertUser): Promise<User>;
-  getReview(userId: number, movieId: number): Promise<Review | undefined>;
-  createReview(userId: number, review: InsertReview): Promise<Review>;
-  updateReview(id: number, review: Partial<InsertReview>): Promise<Review>;
-  getUserReviews(userId: number): Promise<Review[]>;
+  getUser(id: string): Promise<any>;
+  getUserByUsername(username: string): Promise<any>;
+  createUser(user: InsertUser): Promise<any>;
+  getReview(userId: string, movieId: number): Promise<any>;
+  createReview(userId: string, review: InsertReview): Promise<any>;
+  updateReview(id: string, review: Partial<InsertReview>): Promise<any>;
+  getUserReviews(userId: string): Promise<any[]>;
   sessionStore: session.Store;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<number, User>;
-  private reviews: Map<number, Review>;
-  private currentUserId: number;
-  private currentReviewId: number;
+export class MongoStorage implements IStorage {
   sessionStore: session.Store;
 
   constructor() {
-    this.users = new Map();
-    this.reviews = new Map();
-    this.currentUserId = 1;
-    this.currentReviewId = 1;
     this.sessionStore = new MemoryStore({
       checkPeriod: 86400000,
     });
   }
 
-  async getUser(id: number): Promise<User | undefined> {
-    return this.users.get(id);
+  async getUser(id: string) {
+    return await User.findById(id);
   }
 
-  async getUserByUsername(username: string): Promise<User | undefined> {
-    return Array.from(this.users.values()).find(
-      (user) => user.username === username,
-    );
+  async getUserByUsername(username: string) {
+    return await User.findOne({ username });
   }
 
-  async createUser(insertUser: InsertUser): Promise<User> {
-    const id = this.currentUserId++;
-    const user = { ...insertUser, id };
-    this.users.set(id, user);
-    return user;
+  async createUser(insertUser: InsertUser) {
+    const user = new User(insertUser);
+    return await user.save();
   }
 
-  async getReview(userId: number, movieId: number): Promise<Review | undefined> {
-    return Array.from(this.reviews.values()).find(
-      (review) => review.userId === userId && review.movieId === movieId,
-    );
+  async getReview(userId: string, movieId: number) {
+    return await Review.findOne({ userId: new Types.ObjectId(userId), movieId });
   }
 
-  async createReview(userId: number, insertReview: InsertReview): Promise<Review> {
-    const id = this.currentReviewId++;
-    const review = {
+  async createReview(userId: string, insertReview: InsertReview) {
+    const review = new Review({
       ...insertReview,
+      userId: new Types.ObjectId(userId),
+    });
+    return await review.save();
+  }
+
+  async updateReview(id: string, reviewUpdate: Partial<InsertReview>) {
+    return await Review.findByIdAndUpdate(
       id,
-      userId,
-      createdAt: new Date(),
-    };
-    this.reviews.set(id, review);
-    return review;
-  }
-
-  async updateReview(
-    id: number,
-    reviewUpdate: Partial<InsertReview>,
-  ): Promise<Review> {
-    const existingReview = this.reviews.get(id);
-    if (!existingReview) {
-      throw new Error("Review not found");
-    }
-    const updatedReview = { ...existingReview, ...reviewUpdate };
-    this.reviews.set(id, updatedReview);
-    return updatedReview;
-  }
-
-  async getUserReviews(userId: number): Promise<Review[]> {
-    return Array.from(this.reviews.values()).filter(
-      (review) => review.userId === userId,
+      { $set: reviewUpdate },
+      { new: true }
     );
+  }
+
+  async getUserReviews(userId: string) {
+    return await Review.find({ userId: new Types.ObjectId(userId) });
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new MongoStorage();

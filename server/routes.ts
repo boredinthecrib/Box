@@ -25,7 +25,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         query,
       )}`,
     );
-    
+
     if (!response.ok) {
       return res.status(response.status).json({ message: "TMDB API error" });
     }
@@ -55,19 +55,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     const reviewData = insertReviewSchema.parse(req.body);
     const existingReview = await storage.getReview(
-      req.user!.id,
+      req.user!._id.toString(),
       reviewData.movieId,
     );
 
     if (existingReview) {
       const updatedReview = await storage.updateReview(
-        existingReview.id,
+        existingReview._id.toString(),
         reviewData,
       );
       return res.json(updatedReview);
     }
 
-    const review = await storage.createReview(req.user!.id, reviewData);
+    const review = await storage.createReview(req.user!._id.toString(), reviewData);
     res.status(201).json(review);
   });
 
@@ -76,7 +76,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const reviews = await storage.getUserReviews(req.user!.id);
+    const reviews = await storage.getUserReviews(req.user!._id.toString());
     res.json(reviews);
   });
 
@@ -86,7 +86,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
 
     const review = await storage.getReview(
-      req.user!.id,
+      req.user!._id.toString(),
       parseInt(req.params.movieId),
     );
     res.json(review || null);
