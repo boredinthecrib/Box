@@ -6,17 +6,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { useState } from "react";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
+import type { TMDBMovie } from "@/types/tmdb";
+import type { Review } from "@shared/schema";
 
 export default function MovieDetails() {
   const [, params] = useRoute("/movie/:id");
   const { toast } = useToast();
   const [comment, setComment] = useState("");
 
-  const { data: movie, isLoading: movieLoading } = useQuery({
+  const { data: movie, isLoading: movieLoading } = useQuery<TMDBMovie>({
     queryKey: [`/api/movies/${params?.id}`],
   });
 
-  const { data: review } = useQuery({
+  const { data: review } = useQuery<Review>({
     queryKey: [`/api/reviews/movie/${params?.id}`],
   });
 

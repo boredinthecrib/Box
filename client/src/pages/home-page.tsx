@@ -6,13 +6,22 @@ import { MovieCard } from "@/components/movie-card";
 import { useAuth } from "@/hooks/use-auth";
 import { Link } from "wouter";
 import { LogOut, User } from "lucide-react";
+import type { TMDBSearchResponse } from "@/types/tmdb";
 
 export default function HomePage() {
   const [search, setSearch] = useState("");
   const { user, logoutMutation } = useAuth();
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading } = useQuery<TMDBSearchResponse>({
     queryKey: ["/api/movies/search", search],
+    queryFn: async () => {
+      if (!search) return { page: 1, results: [], total_pages: 0, total_results: 0 };
+      const response = await fetch(`/api/movies/search?q=${encodeURIComponent(search)}`);
+      if (!response.ok) {
+        throw new Error("Failed to fetch movies");
+      }
+      return response.json();
+    },
     enabled: search.length > 0,
   });
 
@@ -58,7 +67,7 @@ export default function HomePage() {
           </div>
         ) : data?.results ? (
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {data.results.map((movie: any) => (
+            {data.results.map((movie) => (
               <MovieCard
                 key={movie.id}
                 id={movie.id}
