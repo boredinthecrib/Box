@@ -28,6 +28,13 @@ export function setupAuth(app: Express) {
     resave: false,
     saveUninitialized: false,
     store: storage.sessionStore,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+      sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax'
+    },
+    name: 'movierater.sid' // Custom session ID name
   };
 
   app.set("trust proxy", 1);
