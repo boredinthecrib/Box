@@ -20,32 +20,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ message: "Query parameter 'q' is required" });
     }
 
-    const response = await fetch(
-      `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
-        query,
-      )}`,
-    );
+    try {
+      const response = await fetch(
+        `${TMDB_BASE_URL}/search/movie?api_key=${TMDB_API_KEY}&query=${encodeURIComponent(
+          query,
+        )}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${TMDB_API_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
 
-    if (!response.ok) {
-      return res.status(response.status).json({ message: "TMDB API error" });
+      if (!response.ok) {
+        const error = await response.text();
+        return res.status(response.status).json({ message: `TMDB API error: ${error}` });
+      }
+
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Movie search error:', error);
+      res.status(500).json({ message: "Failed to search movies" });
     }
-
-    const data = await response.json();
-    res.json(data);
   });
 
   app.get("/api/movies/:id", async (req, res) => {
     const movieId = req.params.id;
-    const response = await fetch(
-      `${TMDB_BASE_URL}/movie/${movieId}?api_key=${TMDB_API_KEY}`,
-    );
 
-    if (!response.ok) {
-      return res.status(response.status).json({ message: "TMDB API error" });
+    try {
+      const response = await fetch(
+        `${TMDB_BASE_URL}/movie/${movieId}?api_key=${TMDB_API_KEY}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${TMDB_API_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.text();
+        return res.status(response.status).json({ message: `TMDB API error: ${error}` });
+      }
+
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Movie details error:', error);
+      res.status(500).json({ message: "Failed to fetch movie details" });
     }
-
-    const data = await response.json();
-    res.json(data);
   });
 
   app.post("/api/reviews", async (req, res) => {
