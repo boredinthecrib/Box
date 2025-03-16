@@ -12,7 +12,7 @@ export default function HomePage() {
   const [search, setSearch] = useState("");
   const { user, logoutMutation } = useAuth();
 
-  const { data, isLoading } = useQuery<TMDBSearchResponse>({
+  const { data: searchResults, isLoading: searchLoading } = useQuery<TMDBSearchResponse>({
     queryKey: ["/api/movies/search", search],
     queryFn: async () => {
       if (!search) return { page: 1, results: [], total_pages: 0, total_results: 0 };
@@ -24,6 +24,14 @@ export default function HomePage() {
     },
     enabled: search.length > 0,
   });
+
+  const { data: popularMovies, isLoading: popularLoading } = useQuery<TMDBSearchResponse>({
+    queryKey: ["/api/movies/popular"],
+    enabled: !search,
+  });
+
+  const isLoading = searchLoading || popularLoading;
+  const movies = search ? searchResults?.results : popularMovies?.results;
 
   return (
     <div className="min-h-screen bg-background">
@@ -65,9 +73,9 @@ export default function HomePage() {
               />
             ))}
           </div>
-        ) : data?.results ? (
+        ) : movies?.length ? (
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-            {data.results.map((movie) => (
+            {movies.map((movie) => (
               <MovieCard
                 key={movie.id}
                 id={movie.id}
@@ -79,7 +87,7 @@ export default function HomePage() {
           </div>
         ) : (
           <div className="text-center text-muted-foreground">
-            Search for movies to get started
+            {search ? "No movies found" : "Failed to load recommendations"}
           </div>
         )}
       </main>

@@ -117,6 +117,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(review || null);
   });
 
+  app.get("/api/movies/popular", async (_req, res) => {
+    try {
+      const response = await fetch(
+        `${TMDB_BASE_URL}/movie/popular?api_key=${TMDB_API_KEY}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${TMDB_API_KEY}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.text();
+        return res.status(response.status).json({ message: `TMDB API error: ${error}` });
+      }
+
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Popular movies error:', error);
+      res.status(500).json({ message: "Failed to fetch popular movies" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }
