@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { useRoute } from "wouter";
+import { useRoute, Link } from "wouter";
 import { StarRating } from "@/components/star-rating";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -8,6 +8,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import type { TMDBMovie } from "@/types/tmdb";
 import type { Review } from "@shared/schema";
+import { ArrowLeft } from "lucide-react";
 
 export default function MovieDetails() {
   const [, params] = useRoute("/movie/:id");
@@ -63,6 +64,17 @@ export default function MovieDetails() {
 
   return (
     <div className="min-h-screen bg-background">
+      <header className="bg-primary/5 border-b">
+        <div className="container mx-auto px-4 py-4">
+          <Link href="/">
+            <Button variant="ghost" size="sm" className="mb-4">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Home
+            </Button>
+          </Link>
+        </div>
+      </header>
+
       {backdropUrl && (
         <div
           className="h-[400px] bg-cover bg-center"
