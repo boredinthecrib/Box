@@ -5,7 +5,9 @@ import type { Review } from "@shared/schema";
 import type { TMDBMovie } from "@/types/tmdb";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Star } from "lucide-react";
+import { Loader2, Star, ArrowLeft, LogOut } from "lucide-react";
+import { Link } from "wouter";
+import { Button } from "@/components/ui/button";
 
 interface ReviewedMovie extends TMDBMovie {
   rating: number;
@@ -13,7 +15,7 @@ interface ReviewedMovie extends TMDBMovie {
 }
 
 export default function ProfilePage() {
-  const { user } = useAuth();
+  const { user, logoutMutation } = useAuth();
   const { toast } = useToast();
 
   const { data: reviews, isLoading: reviewsLoading } = useQuery<Review[]>({ 
@@ -74,8 +76,28 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="bg-primary text-primary-foreground">
-        <div className="container mx-auto px-4 py-8">
+      <header className="bg-primary/5 border-b">
+        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
+          <Link href="/">
+            <Button variant="ghost" size="sm">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Home
+            </Button>
+          </Link>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => logoutMutation.mutate()}
+            disabled={logoutMutation.isPending}
+          >
+            <LogOut className="h-4 w-4 mr-2" />
+            {logoutMutation.isPending ? "Logging out..." : "Logout"}
+          </Button>
+        </div>
+      </header>
+
+      <div className="bg-primary text-primary-foreground py-8">
+        <div className="container mx-auto px-4">
           <h1 className="text-3xl font-bold">
             {user?.username}'s Movie Ratings
           </h1>
@@ -89,7 +111,7 @@ export default function ProfilePage() {
             </div>
           )}
         </div>
-      </header>
+      </div>
 
       <main className="container mx-auto px-4 py-8">
         {isLoading ? (
