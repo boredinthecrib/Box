@@ -5,7 +5,7 @@ import type { Review } from "@shared/schema";
 import type { TMDBMovie } from "@/types/tmdb";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Loader2, Star } from "lucide-react";
 
 interface ReviewedMovie extends TMDBMovie {
   rating: number;
@@ -67,6 +67,11 @@ export default function ProfilePage() {
 
   const isLoading = reviewsLoading || moviesLoading;
 
+  // Calculate average rating
+  const averageRating = reviews?.length 
+    ? (reviews.reduce((sum, review) => sum + review.rating, 0) / reviews.length).toFixed(1)
+    : null;
+
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-primary text-primary-foreground">
@@ -74,6 +79,15 @@ export default function ProfilePage() {
           <h1 className="text-3xl font-bold">
             {user?.username}'s Movie Ratings
           </h1>
+          {averageRating && (
+            <div className="mt-4 flex items-center gap-2">
+              <Star className="w-6 h-6 fill-current" />
+              <span className="text-xl">
+                Average Rating: {averageRating} / 5
+                <span className="text-sm ml-2">({reviews?.length} movies rated)</span>
+              </span>
+            </div>
+          )}
         </div>
       </header>
 
